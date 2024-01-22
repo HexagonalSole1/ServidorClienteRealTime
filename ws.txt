@@ -1,0 +1,93 @@
+const express = require('express');
+const { WebSocketServer } = require('ws');
+
+const app = express();
+const server = app.listen(3000, () => console.log("Servidor corriendo"));
+
+const wss = new WebSocketServer({ server });
+
+const preguntas = [
+    { id: 1, cuerpo: "¿Cómo manejas los plazos ajustados al enfrentarte a una nueva actividad en el desarrollo de software?" },
+    { id: 2, cuerpo: "¿Cuáles son tus estrategias para mantener la comunicación efectiva con tu equipo cuando te eliminan de un proyecto?" },
+    { id: 3, cuerpo: "¿Cómo te aseguras de comprender completamente los requisitos de una nueva tarea antes de comenzar a trabajar en ella?" },
+    { id: 4, cuerpo: "¿Has experimentado cambios en la tecnología o en las herramientas durante el desarrollo de un proyecto y cómo los has abordado?" },
+    { id: 5, cuerpo: "¿Cómo lidias con situaciones de conflicto o desacuerdo con otros miembros del equipo durante el desarrollo de software?" }
+];
+
+const respuestas = [
+    [
+        "1. Cuando enfrento plazos ajustados, priorizo tareas y divido el trabajo en pasos manejables.",
+        "2. Utilizo metodologías ágiles como Scrum para una planificación eficiente.",
+        "3. Colaboro estrechamente con el equipo para distribuir la carga de trabajo de manera equitativa.",
+    ],
+    [
+        "Mantengo la comunicación a través de herramientas como Slack y reuniones virtuales.",
+        "Fomento un ambiente de transparencia para abordar cualquier problema de comunicación.",
+        "Utilizo la retroalimentación constante para mejorar la colaboración en el equipo.",
+    ],
+    [
+        "Realizo sesiones detalladas de análisis de requisitos con los interesados.",
+        "Utilizo diagramas y prototipos para visualizar mejor los requisitos.",
+        "Pregunto activamente a los stakeholders para aclarar cualquier ambigüedad en los requisitos.",
+    ],
+    [
+        "Adapto rápidamente mi enfoque y aprendo nuevas tecnologías según sea necesario.",
+        "Participo en comunidades en línea y eventos para estar al tanto de las últimas tendencias.",
+        "Colaboro con el equipo para evaluar la viabilidad de implementar nuevas tecnologías en el proyecto.",
+    ],
+    [
+        "Abordo los conflictos con empatía, buscando soluciones en lugar de culpar.",
+        "Facilito reuniones para discutir abiertamente y resolver desacuerdos.",
+        "Promuevo un ambiente de trabajo inclusivo y respetuoso para evitar conflictos innecesarios.",
+    ],
+];
+
+const correctas = [2, 3, 2, 1, 2];
+
+let sesiones = 0;
+let preguntaActual = 0;
+let usuariosQueHanRespondido = [];
+let correct = 0;
+
+wss.on('connection', (ws) => {
+    sesiones++;
+    console.log(sesiones);
+
+    ws.send(JSON.stringify({ pregunta: preguntas[preguntaActual] }));
+    ws.send(JSON.stringify({ respuesta: respuestas[preguntaActual] }));
+
+    ws.on('message', (message) => {
+        console.log(`Recibido: ${message}`);
+        usuariosQueHanRespondido=usuariosQueHanRespondido+1
+
+console.log( correctas[preguntaActual])
+        if(message== correctas[preguntaActual])
+        {
+                correct = 1
+        }
+        if(usuariosQueHanRespondido >= sesiones){
+
+          
+
+            if(correct==1)
+            {
+                correct=0
+                usuariosQueHanRespondido=0
+                preguntaActual=preguntaActual+1
+                ws.send(JSON.stringify({ pregunta: preguntas[preguntaActual] }));
+                ws.send(JSON.stringify({ respuesta: respuestas[preguntaActual] }));
+
+            }
+
+         
+        }
+
+
+    });
+
+    ws.on('close', () => {
+        sesiones--;
+    });
+});
+
+app.use(express.json());
