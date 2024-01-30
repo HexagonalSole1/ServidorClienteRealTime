@@ -1,6 +1,8 @@
 import { Server } from "socket.io";
 import { createServer } from "http";
 import dotenv from "dotenv";
+import authSocket from "../socket.io/auth.middlware.js"
+
 
 
 function ConectarSocket(servidor){
@@ -14,7 +16,9 @@ function ConectarSocket(servidor){
           methods: ["GET", "POST", "PATCH", "DELETE", "PUT"],
         },
       });
+      io.use(authSocket)
 
+    
       
     io.on('connection', (socket) => {
         console.log('usuario conectado');
@@ -30,9 +34,9 @@ function ConectarSocket(servidor){
         });
       
       
-        socket.on("chat message", (msg, roomNumber) => {
+        socket.on("chat message", (msg, roomNumber,remitente) => {
           const roomName = `Room ${roomNumber}`;
-          io.to(roomName).emit("chat message", msg);
+          io.to(roomName).emit("chat message", {msg,roomName,remitente});
           console.log(`Mensaje en ${roomName}: ${msg}`);
         });
       });
